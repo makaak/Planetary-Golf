@@ -23,8 +23,8 @@ public class Main extends Application {
     private Font buttonFont = new Font(40);
     private Stage window;
 
-    private int WIDTH = 2700;
-    private int HEIGHT = 1800;
+    private int WIDTH = 1900;
+    private int HEIGHT = 1000;
 
     private AnimationTimer aT;
 
@@ -42,7 +42,10 @@ public class Main extends Application {
     private Polyline trajektoor = new Polyline();
 
     private boolean moving;
+    private boolean trajektoorMoving;
 
+    //DEBUG
+    private boolean debug = true;
 
     private Text debugText0 = new Text();
     private Text debugText1 = new Text();
@@ -69,7 +72,10 @@ public class Main extends Application {
         pall = new Planeet(10, 1);
         pseudoPall = new Planeet(10, 1);
         pall.setFill(Color.WHITE);
+
         auk = new Circle(20, Color.GREEN);
+        auk.setCenterX(1350);
+        auk.setCenterY(400);
 
         //Hardcoded Levels... For now.
         //Level0
@@ -141,32 +147,37 @@ public class Main extends Application {
 
 
         game.setOnMousePressed(e -> {
-            joon.setStartX(e.getSceneX());
-            joon.setStartY(e.getSceneY());
-            joon.setEndX(pall.getCenterX());
-            joon.setEndY(pall.getCenterY());
-            joon.setVisible(true);
-            trajektoor.setVisible(true);
+            if(!moving) {
+                joon.setStartX(e.getSceneX());
+                joon.setStartY(e.getSceneY());
+                joon.setEndX(pall.getCenterX());
+                joon.setEndY(pall.getCenterY());
+                joon.setVisible(true);
+                trajektoor.setVisible(true);
+            }
         });
 
         game.setOnMouseDragged(e -> {
-            joon.setStartX(e.getSceneX());
-            joon.setStartY(e.getSceneY());
-            joon.setEndX(pall.getCenterX());
-            joon.setEndY(pall.getCenterY());
-            debugText0.setText((String.valueOf((Math.atan2((pall.getCenterY() - e.getSceneY()), (pall.getCenterX() - e.getSceneX()))))));
+            if(!moving) {
+                joon.setStartX(e.getSceneX());
+                joon.setStartY(e.getSceneY());
+                joon.setEndX(pall.getCenterX());
+                joon.setEndY(pall.getCenterY());
+                debugText0.setText((String.valueOf((Math.atan2((pall.getCenterY() - e.getSceneY()), (pall.getCenterX() - e.getSceneX()))))));
 
-            pseudoPall.setCenterY(pall.getCenterY());
-            pseudoPall.setCenterX(pall.getCenterX());
-            trajektoor.getPoints().clear();
-            kick(pseudoPall, Math.atan2(pseudoPall.getCenterY() - e.getSceneY(), pseudoPall.getCenterX() - e.getSceneX()), Math.sqrt(Math.pow(pseudoPall.getCenterX() - e.getSceneX(), 2) + Math.pow(pseudoPall.getCenterY() - e.getSceneY(), 2))/100, false);
-            for (int j = 0; j < 10000; j++) {
+                pseudoPall.setCenterY(pall.getCenterY());
+                pseudoPall.setCenterX(pall.getCenterX());
+                trajektoor.getPoints().clear();
+                kick(pseudoPall, Math.atan2(pseudoPall.getCenterY() - e.getSceneY(), pseudoPall.getCenterX() - e.getSceneX()), Math.sqrt(Math.pow(pseudoPall.getCenterX() - e.getSceneX(), 2) + Math.pow(pseudoPall.getCenterY() - e.getSceneY(), 2)) / 100, false);
+                for (int j = 0; j < 2500; j++) {
 
 
-                updatePall(pseudoPall);
+                    updatePall(pseudoPall);
 
-                trajektoor.getPoints().addAll(pseudoPall.getCenterX(), pseudoPall.getCenterY());
+                    trajektoor.getPoints().addAll(pseudoPall.getCenterX(), pseudoPall.getCenterY());
+                    if(!trajektoorMoving) break;
 
+                }
             }
 
 
@@ -174,15 +185,16 @@ public class Main extends Application {
 
         //KICK
         game.setOnMouseReleased(e -> {
-            joon.setVisible(false);
-            trajektoor.setVisible(false);
-            kick(pall, Math.atan2(pall.getCenterY() - e.getSceneY(), pall.getCenterX() - e.getSceneX()), Math.sqrt(Math.pow(pall.getCenterX() - e.getSceneX(), 2) + Math.pow(pall.getCenterY() - e.getSceneY(), 2))/100, true);
+            if(!moving) {
+                joon.setVisible(false);
+                trajektoor.setVisible(false);
+                kick(pall, Math.atan2(pall.getCenterY() - e.getSceneY(), pall.getCenterX() - e.getSceneX()), Math.sqrt(Math.pow(pall.getCenterX() - e.getSceneX(), 2) + Math.pow(pall.getCenterY() - e.getSceneY(), 2)) / 100, true);
+            }
         });
 
         // START game
         playButton.setOnAction(e -> {
-            auk.setCenterX(1350);
-            auk.setCenterY(400);
+
             level = 0;
             initLevel();
             window.setScene(game);
@@ -237,60 +249,15 @@ public class Main extends Application {
         window.show();
     }
 
-    /*
-    private Point2D getStep(double x, double y, ListIterator<Planeet> i, double m, double sx, double sy, double r){
+    private void updatePall(Planeet pall){
 
+        ListIterator<Planeet> i = Levels.get(level).listIterator();
         Planeet p;
         double dX;
         double dY;
         double diag;
         ForceVector V = new ForceVector();
-        ForceVector V2 = new ForceVector();
 
-        while(i.hasNext()){
-            p = i.next();
-
-            dX = p.getCenterX() - x;
-            dY = p.getCenterY() - y;
-            diag = Math.sqrt(Math.pow(dX,2) + Math.pow(dY,2));
-
-            V.setF(m*p.getMass()/Math.pow(diag,2));
-            V.setDir(Math.atan2(dY, dX));
-
-            debugText4.setText(String.valueOf(V.getDir()));
-
-            //debug
-            //System.out.println(V.getDir());
-
-            V2.addVector(V);
-
-            //Collision detection
-
-            if(diag <= (r + p.getRadius())){
-                sx = sx*Math.cos(Math.atan2(-dY, -dX));
-                sy = sy*Math.sin(Math.atan2(-dY, -dX));
-            }
-
-        }
-
-        return new Point2D(x + sx, y + sy);
-
-    }*/
-
-    private void updatePall(Planeet pall){
-
-        ListIterator<Planeet> i = Levels.get(level).listIterator();
-        Planeet p = null;
-        double dX = 0;
-        double dY = 0;
-        double diag = 0;
-        ForceVector V = new ForceVector();
-
-
-        double s;
-        double b;
-        double a;
-        double nurk;
 
         pall.getFVector().setDir(0);
         pall.getFVector().setF(0);
@@ -335,6 +302,7 @@ public class Main extends Application {
                 pall.setCenterX(p.getCenterX() - Math.signum(dX) * (pall.getRadius() + p.getRadius() + 1) * Math.abs(dX)/diag);
 
                 moving = false;
+                trajektoorMoving = false;
 
                 aT.stop();
 
@@ -343,7 +311,7 @@ public class Main extends Application {
         }
 
 
-        if (moving) {
+        if (trajektoorMoving || moving) {
 
 
             pall.setCenterX(pall.getCenterX() + pall.getSpeedX());
@@ -368,8 +336,13 @@ public class Main extends Application {
         pall.setSpeedX(Math.cos(dir)*speed);
 
         pall.setSpeedY(Math.sin(dir)*speed);
-        moving = true;
-        if(valid) aT.start();
+
+        if(valid) {
+            moving = true;
+            aT.start();
+        }else{
+            trajektoorMoving= true;
+        }
     }
 
     private void initLevel(){
@@ -377,7 +350,11 @@ public class Main extends Application {
         gameLayout.getChildren().addAll(Levels.get(level));
         gameLayout.getChildren().addAll(pall, auk, joon, trajektoor);
 
-        gameLayout.getChildren().addAll(debugText0, debugText1, debugText3, debugText2, debugText4, debugLine);
+        moving = false;
+
+        if(debug) {
+            gameLayout.getChildren().addAll(debugText0, debugText1, debugText3, debugText2, debugText4, debugLine);
+        }
 
         pall.setCenterX(150);
         pall.setCenterY(230);
