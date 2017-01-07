@@ -23,8 +23,10 @@ public class Main extends Application {
     private Font buttonFont = new Font(40);
     private Stage window;
 
-    private int WIDTH = 1900;
-    private int HEIGHT = 1000;
+    private Scene menu;
+
+    private int WIDTH = 1500;
+    private int HEIGHT = 800;
 
     private AnimationTimer aT;
 
@@ -43,6 +45,9 @@ public class Main extends Application {
 
     private boolean moving;
     private boolean trajektoorMoving;
+
+    private boolean winner;
+    private Text winText;
 
     //DEBUG
     private boolean debug = true;
@@ -76,6 +81,13 @@ public class Main extends Application {
         auk = new Circle(20, Color.GREEN);
         auk.setCenterX(1350);
         auk.setCenterY(400);
+
+        winText = new Text("WINNER");
+        winText.setFont(new Font(200));
+        winText.setFill(Color.RED);
+        winText.setVisible(false);
+        winText.setLayoutX(300);
+        winText.setLayoutY(300);
 
         //Hardcoded Levels... For now.
         //Level0
@@ -128,7 +140,7 @@ public class Main extends Application {
         VBox menuLayout = new VBox();
         gameLayout = new Group();
 
-        Scene menu = new Scene(menuLayout, WIDTH, HEIGHT, Color.WHITE);
+        menu = new Scene(menuLayout, WIDTH, HEIGHT, Color.WHITE);
         Scene game = new Scene(gameLayout, WIDTH, HEIGHT, Color.BLACK);
 
         window.setScene(menu);
@@ -207,7 +219,8 @@ public class Main extends Application {
                 aT.stop();
                 window.setScene(menu);
             }
-            if(e.getCode() == KeyCode.SPACE){
+
+            if(debug && e.getCode() == KeyCode.SPACE && !winner){
                 if(i == 1){
                     aT.stop();
                 }else{
@@ -215,6 +228,7 @@ public class Main extends Application {
                 }
                 i = -i;
             }
+            if(winner) window.setScene(menu);
         });
 
 
@@ -257,6 +271,8 @@ public class Main extends Application {
         double dY;
         double diag;
         ForceVector V = new ForceVector();
+
+
 
 
         pall.getFVector().setDir(0);
@@ -322,7 +338,13 @@ public class Main extends Application {
 
         }
 
+        if(moving && ((pall.getRadius() + auk.getRadius()) > (Math.sqrt(Math.pow(pall.getCenterX() - auk.getCenterX(),2) + Math.pow(pall.getCenterY() - auk.getCenterY(),2))))){
+            aT.stop();
+            winner = true;
+            winText.setVisible(true);
 
+
+        }
 
 
 
@@ -339,6 +361,7 @@ public class Main extends Application {
 
         if(valid) {
             moving = true;
+            trajektoorMoving = false;
             aT.start();
         }else{
             trajektoorMoving= true;
@@ -348,9 +371,10 @@ public class Main extends Application {
     private void initLevel(){
         gameLayout.getChildren().clear();
         gameLayout.getChildren().addAll(Levels.get(level));
-        gameLayout.getChildren().addAll(pall, auk, joon, trajektoor);
+        gameLayout.getChildren().addAll(pall, auk, joon, trajektoor, winText);
 
         moving = false;
+        winner = false;
 
         if(debug) {
             gameLayout.getChildren().addAll(debugText0, debugText1, debugText3, debugText2, debugText4, debugLine);
