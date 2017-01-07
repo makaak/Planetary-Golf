@@ -50,7 +50,7 @@ public class Main extends Application {
     private Text winText;
 
     //DEBUG
-    private boolean debug = true;
+    private boolean debug = false;
 
     private Text debugText0 = new Text();
     private Text debugText1 = new Text();
@@ -94,6 +94,7 @@ public class Main extends Application {
         LevelObjects.add(new Planeet(WIDTH/2, HEIGHT/2, 50, 500));
         LevelObjects.add(new Planeet(WIDTH/2 + 200, HEIGHT/2 - 150, 20, 1000));
         LevelObjects.add(new Planeet(150, 300, 50, 750));
+
         Levels.add((ArrayList<Planeet>) LevelObjects.clone());
         LevelObjects.clear();
 
