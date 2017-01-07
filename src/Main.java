@@ -68,7 +68,7 @@ public class Main extends Application {
         Levels = new ArrayList<>();
 
         joon = new Line();
-        joon.setStroke(Color.WHITE);
+        joon.setStroke(Color.GREEN);
         joon.setStrokeWidth(2);
 
         trajektoor.setStroke(Color.WHITE);
@@ -136,6 +136,7 @@ public class Main extends Application {
             e.consume();
             closeProgram();
         });
+        window.setTitle("Planetary Golf");
         
         VBox menuLayout = new VBox();
         gameLayout = new Group();
@@ -166,6 +167,20 @@ public class Main extends Application {
                 joon.setEndY(pall.getCenterY());
                 joon.setVisible(true);
                 trajektoor.setVisible(true);
+
+                pseudoPall.setCenterY(pall.getCenterY());
+                pseudoPall.setCenterX(pall.getCenterX());
+                trajektoor.getPoints().clear();
+                kick(pseudoPall, Math.atan2(pseudoPall.getCenterY() - e.getSceneY(), pseudoPall.getCenterX() - e.getSceneX()), Math.sqrt(Math.pow(pseudoPall.getCenterX() - e.getSceneX(), 2) + Math.pow(pseudoPall.getCenterY() - e.getSceneY(), 2)) / 100, false);
+                for (int j = 0; j < 2500; j++) {
+
+
+                    updatePall(pseudoPall);
+
+                    trajektoor.getPoints().addAll(pseudoPall.getCenterX(), pseudoPall.getCenterY());
+                    if(!trajektoorMoving) break;
+
+                }
             }
         });
 
@@ -215,6 +230,12 @@ public class Main extends Application {
 
         // STOP game
         game.setOnKeyPressed(e -> {
+
+            if(winner){
+                winText.setVisible(false);
+                window.setScene(menu);
+            }
+
             if (e.getCode() == KeyCode.ESCAPE) {
                 aT.stop();
                 window.setScene(menu);
@@ -228,7 +249,7 @@ public class Main extends Application {
                 }
                 i = -i;
             }
-            if(winner) window.setScene(menu);
+
         });
 
 
@@ -371,7 +392,7 @@ public class Main extends Application {
     private void initLevel(){
         gameLayout.getChildren().clear();
         gameLayout.getChildren().addAll(Levels.get(level));
-        gameLayout.getChildren().addAll(pall, auk, joon, trajektoor, winText);
+        gameLayout.getChildren().addAll(joon, pall, auk, trajektoor, winText);
 
         moving = false;
         winner = false;
